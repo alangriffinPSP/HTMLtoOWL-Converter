@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html lang="en" data-theme="dark">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="stylesheet" href="owlConverter.css" />
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+	<script src="owlConverter.js"></script>
+	<title>OWL Converter</title>
+</head>
+
+<body id="body">
+	<button id="theme-change"></button>
+	
+	<div id="heading">
+		<h2>OWL CONVERTER</h2>
+		<h6 id="author-small">By ALAN GRIFFIN</h6>
+	</div>
+
+	<main id="main">
+
+		<div id="inputContainer">
+			<form id="conversionForm">
+				<textarea id="userHTML" cols="80" rows="7" placeholder="Enter HTML code here..." autofocus></textarea>
+			</form>
+			<button id="convert" type="submit">Convert</button>
+		</div>
+		<div id="outputContainer">
+			OWL outputs here...
+		</div>
+	</main>
+</body>
+
+</html>
