@@ -77,33 +77,13 @@ a:hover {
 }
 
 #outputContainer {
+    display: none;
     margin-top: 20px;
     margin-left: auto;
     margin-right: auto;
     padding: 25px;
+    color: #d8d6d6;
     background: var(--linkhover);
     width: 45%;
     height: 200px;
 }
-
-/* @media (max-width: 500px) {
-    #sidebar {
-        display: none;
-        position: absolute;
-        border-right: solid 2px #49647e;
-        border-top: solid 2px #49647e;
-        padding-right: 20px;
-    }
-
-    #menutoggle~label {
-        display: block;
-    }
-
-    #author {
-        display: none;
-    }
-
-    #author-small {
-        display: block;
-    }
-} */

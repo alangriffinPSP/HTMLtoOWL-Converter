@@ -1,11 +1,33 @@
+//WORKING (I think!)
+// Closing tags identified
+// Opening tags identified
+// Output pane working
+// Tag content
+// Tag attributes
+// Nested tags
+// Auto closing tags detected
+
+//NOT WORKING
+// Empty div undetected
+// Script tags handled correctly?
+
+//REGEX EXPRESSIONS
+// /<\/.*?>/gm    </xxxx> closing tag
+// /\/\s?>/gm   Auto closing tag
+// /</g         <
+// />/g         >
+// /=/g         =
+// /(?<=>)\s*([^<\s][^<]*?[^<\s])\s*(?=<)/gm  'Content' after opening tag, before closing tag, multiline, ignore whitespace
+
 $(document).ready(function () {
 
     //Object for methods to run on page load
-    class PageLoad {
-        constructor() { }
+    const pageLoad = {
+
         clearForm() {
-            $('#conversionForm').trigger('reset')
-        }
+            $('#conversionForm').trigger('reset');
+            $('#outputContainer').hide().html();
+        },
 
         themeSet() {
             if ($('html').attr('data-theme') == 'dark') {
@@ -15,12 +37,68 @@ $(document).ready(function () {
             }
         }
     }
-    //New object created from PageLoad class
-    const freshPage = new PageLoad();
 
-    class UserInteraction {
-        constructor() { }
-        
+    const codeConversion = {
+
+        receiveHTML() {
+            let HTMLInput = $('#userHTML').val();
+
+            if (!HTMLInput) {
+                return;
+            }
+            codeConversion.tagContentDetection(HTMLInput);
+        },
+
+        //Detects html tag content and encases in quote marks
+        tagContentDetection(input) {
+            const matchCase = input.match(/(?<=>)\s*([^<\s][^<]*?[^<\s])\s*(?=<)/gm);
+
+            if (input.match(/(?<=>)\s*([^<\s][^<]*?[^<\s])\s*(?=<)/gm)) {
+
+                let newString = input;
+                matchCase.forEach(function (match) {
+                    newString = newString.replace(match, ' "' + match + '" ');
+                });
+                codeConversion.stepOne(newString);
+                return;
+            }
+            codeConversion.processSlash(input);
+            return (input);
+        },
+
+        //Replaces forward slash
+        processSlash(input) {
+            let slash = input.replace(/<\/.*?>/gm, ')').replace(/\/\s?>/gm, ' "" )');
+            this.processLessThan(slash);
+        },
+
+        //Replaces less than
+        processLessThan(input) {
+            let lessThan = input.replace(/</g, '(:');
+            this.processMoreThan(lessThan);
+        },
+
+        //Replaces more than
+        processMoreThan(input) {
+            let moreThan = input.replace(/>/g, ' ');
+            this.processEquals(moreThan);
+        },
+
+        //Replaces equals
+        processEquals(input) {
+            let equals = input.replace(/=/g, ': ');
+            console.log(`Current state = ${equals}`);
+            this.processEmptyTag(equals);
+        },
+
+        processEmptyTag(input) {
+            console.log(input);
+            pageElements.displayOWL(input);
+        }
+    }
+
+    //Handles page elements 
+    const pageElements = {
         changeTheme() {
             if ($('html').attr('data-theme') == 'dark') {
                 ($('html').attr('data-theme', 'light'));
@@ -29,49 +107,29 @@ $(document).ready(function () {
                 ($('html').attr('data-theme', 'dark'));
                 $('#theme-change').html('LIGHTER');
             }
-        }
-        
-        replaceHTML(input) { //This method will do the conversion against regex and return to node method
-            // const regex = [/</, />/, /\//, /=/];
-            
-            // $.each(regex, function(index, value){
-            //     console.log(index + ':' + value);
-            //     console.log("user input = " + input)
-            // })
-            
-            const newOutput = input.replace(/</g, "(:").replace(/>/g, ")").replace(/\//g, "").replace(/=/g, ": ");
-            console.log("newOutput " + newOutput);
-            return newOutput;
-            
-        }
-        createNode() {
-            let $htmlInput = $('#userHTML').val();
-           
-            if (!$htmlInput){
-                return
-            }
-            const output = interact.replaceHTML($htmlInput);
-            // console.log(output);
-            
-            $('#outputContainer').html(output); 
-            $(window).scrollTop(0);
-            freshPage.clearForm();
-        }
+        },
 
-        formClickListener() {
-            $('#convert').click(this.createNode);
+        //Receives converted HTML and displays in output pane
+        displayOWL(OWLOutput) {
+            $('#outputContainer').show().html(OWLOutput);
+        },
+
+        convertClickListener() {
+            $('#convert').click(codeConversion.receiveHTML);
+        },
+
+        resetClickListener() {
+            $('#reset').click(pageLoad.clearForm);
         }
     }
 
-    //New object created from UserInteraction class
-    const interact = new UserInteraction();
-    interact.formClickListener();
-
     //User controlled method calls
-    $("#theme-change").click(interact.changeTheme);
+    $("#theme-change").click(pageElements.changeTheme);
 
     //Methods run on page load
-    freshPage.clearForm();
-    freshPage.themeSet();
+    pageElements.convertClickListener();
+    pageElements.resetClickListener();
+    pageLoad.clearForm();
+    pageLoad.themeSet();
 
 });
