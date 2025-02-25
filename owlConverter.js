@@ -59,7 +59,7 @@ $(document).ready(function () {
                 matchCase.forEach(function (match) {
                     newString = newString.replace(match, ' "' + match + '" ');
                 });
-                codeConversion.stepOne(newString);
+                codeConversion.processSlash(newString);
                 return;
             }
             codeConversion.processSlash(input);
@@ -91,8 +91,11 @@ $(document).ready(function () {
             this.processEmptyTag(equals);
         },
 
+        //WIP - detection of empty tags
         processEmptyTag(input) {
             console.log(input);
+
+            // <(.*)>\s*<(\/\1)>
             pageElements.displayOWL(input);
         }
     }
@@ -131,5 +134,4 @@ $(document).ready(function () {
     pageElements.resetClickListener();
     pageLoad.clearForm();
     pageLoad.themeSet();
-
 });
