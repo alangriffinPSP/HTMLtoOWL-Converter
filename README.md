@@ -19,3 +19,7 @@ First update. Some specific situations still aren't accurately captured.
 - Nested tags
 - Auto closing tags now detected
 
+
+### 17/03/2025
+
+New approach using DOM node detection instead. Lots not working. Initial commit of this method.

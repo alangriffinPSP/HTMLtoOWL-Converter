@@ -59,11 +59,29 @@ $(document).ready(function () {
                 matchCase.forEach(function (match) {
                     newString = newString.replace(match, ' "' + match + '" ');
                 });
-                codeConversion.processSlash(newString);
+                codeConversion.emptyTagDetection(newString);
                 return;
             }
-            codeConversion.processSlash(input);
+            codeConversion.emptyTagDetection(input);
             return (input);
+        },
+
+        //Does not work correctly
+        emptyTagDetection(input){
+            const matchCase = input.match(/<(.*)>\s*<(\/\1)>/gm);
+            
+            if (input.match(/<(.*)>\s*<(\/\1)>/gm)){
+                
+                let newString = input;
+                matchCase.forEach(function (match) {
+                    newString = newString.replace("<" + match + ">", 'X' + match + 'X');
+                });
+                this.processSlash(newString);
+                return;
+            }
+            this.processSlash(input);
+            return (input);
+           
         },
 
         //Replaces forward slash
@@ -88,15 +106,7 @@ $(document).ready(function () {
         processEquals(input) {
             let equals = input.replace(/=/g, ': ');
             console.log(`Current state = ${equals}`);
-            this.processEmptyTag(equals);
-        },
-
-        //WIP - detection of empty tags
-        processEmptyTag(input) {
-            console.log(input);
-
-            // <(.*)>\s*<(\/\1)>
-            pageElements.displayOWL(input);
+            pageElements.displayOWL(input);;
         }
     }
 
