@@ -10,6 +10,7 @@
 // Text content of tags is output before node's attributes
 // Nested child nodes still not correctly handled
 // Closing parentheses still needs to be implemented
+// Nested P closing tags detected as opening tags instead? 
 
 $(document).ready(function () {
 
@@ -20,7 +21,7 @@ $(document).ready(function () {
             $('#conversionForm').trigger('reset');
             $('#hiddenHTML').html('')
             $('#outputContainer').hide().html();
-            // $('#userHTML').val("<div>I'm a div</div><p>I'm a paragraph</p>")
+            $('#userHTML').val("<div><p>I'm a grandchild paragraph</p>I'm a div</div>")
         },
 
         themeSet() {
@@ -61,8 +62,8 @@ $(document).ready(function () {
                     outputString += codeConversion.processAttributeNodes(node)
                 }
                 if (node.nodeType == 3) {
-                    if (!node.data.match(/\s+/)){
-                    outputString += codeConversion.processTextNodes(node)
+                    if (!node.data.match(/\s+/)) {
+                        outputString += codeConversion.processTextNodes(node)
                     }
                 }
             })
@@ -74,20 +75,24 @@ $(document).ready(function () {
             return `${node.localName}`;
         },
 
-        //NOT WORKING --- FIX NEXT
+        //NOT WORKING CORRECTLY
         processChildNodes(node) {
+            console.log(node.childNodes);
             let childrenFound = node.childNodes;
-            
+
             let processedChildren = "";
-            // attempting to loop through childnodes
-            //sort of working. Needs to drill deeper to return children's children and content
+
             childrenFound.forEach(function (child) {
-                if(child.nodeType == 3){
-                    processedChildren += `"${child.data}" ` 
-                    console.log(processedChildren);
-                } else if (child.nodeType == 1){
-                    processedChildren += `(:${child.localName} ` 
-                    console.log(processedChildren);
+                if (child.nodeType == 3) {
+                    processedChildren += `"${child.data}" `;
+
+                } else if (child.nodeType == 1) {
+                    processedChildren += `(:${child.localName} `;
+                    if (child.hasChildNodes()) {
+                        console.log("nested child detected", child);
+                        processedChildren += codeConversion.processChildNodes(child);
+                    }
+
                 }
             })
             return processedChildren;
@@ -97,7 +102,11 @@ $(document).ready(function () {
         processAttributeNodes(node) {
             let attributesFound = "";
             for (let i = 0; i < node.attributes.length; i++) {
-                attributesFound += `${node.attributes[i].localName}: "${node.attributes[i].nodeValue}" `;
+                if (!node.attributes[i].nodeValue == "") {
+                    attributesFound += `${node.attributes[i].localName}: "${node.attributes[i].nodeValue}" `;
+                } else {
+                    attributesFound += `"${node.attributes[i].localName}" `;
+                }
             }
             return attributesFound;
         },
