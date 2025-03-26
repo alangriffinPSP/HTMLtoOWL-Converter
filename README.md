@@ -23,3 +23,7 @@ First update. Some specific situations still aren't accurately captured.
 ### 17/03/2025
 
 New approach using DOM node detection instead. Lots not working. Initial commit of this method.
+
+### 26/03/2025
+
+Refactored with one main loop. Still not 100% complete. Closing parentheses handling still a work in progress.

@@ -7,14 +7,14 @@
 	<link rel="stylesheet" href="owlConverter.css" />
 	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 	<script src="owlConverter_DOM.js"></script>
-	<title>OWL Converter</title>
+	<title>HTML - OWL Converter</title>
 </head>
 
 <body id="body">
 	<button id="theme-change"></button>
 	
 	<div id="heading">
-		<h2>OWL CONVERTER</h2>
+		<h2>HTML - OWL CONVERTER</h2>
 		<h6 id="author-small">By ALAN GRIFFIN</h6>
 	</div>
 
@@ -22,12 +22,11 @@
 
 		<div id="inputContainer">
 			<form id="conversionForm">
-				<textarea id="userHTML" cols="80" rows="7" placeholder="Enter HTML code here..." autofocus></textarea>
+				<textarea id="userHTML" cols="80" rows="7" placeholder="Enter HTML code here..."></textarea>
 			</form>
-			<button id="convert" type="submit">Convert</button><button id="reset" type="submit">Reset</button>
+			<button id="convert" type="submit" autofocus>Convert</button><button id="reset" type="submit">Reset</button>
 		</div>
-		<div id="hiddenHTML">
-		</div>
+		<!-- <div>Expected output:<pre id="expect">(:div class: "testClass" id: "testID" (:h1 id: "childH1" "This is a child node (text)" ))</pre></div> -->
 		<div id="outputContainer">
 			OWL outputs here...
 		</div>

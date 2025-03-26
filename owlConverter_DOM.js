@@ -1,16 +1,7 @@
-// Node Types
-
-// 1 = Element
-// 2 = Attribute
-// 3 = Text
-// 8 = Comment
-
 
 // TO FIX:
-// Text content of tags is output before node's attributes
-// Nested child nodes still not correctly handled
-// Closing parentheses still needs to be implemented
-// Nested P closing tags detected as opening tags instead? 
+
+//Closing parentheses not accurate
 
 $(document).ready(function () {
 
@@ -21,7 +12,7 @@ $(document).ready(function () {
             $('#conversionForm').trigger('reset');
             $('#hiddenHTML').html('')
             $('#outputContainer').hide().html();
-            $('#userHTML').val("<div><p>I'm a grandchild paragraph</p>I'm a div</div>")
+            // $('#userHTML').val('<div class="testClass" id="testID"><h1 id="childH1">This is a child node (text)</h1></div>')
         },
 
         themeSet() {
@@ -34,87 +25,87 @@ $(document).ready(function () {
     }
 
     const codeConversion = {
-        // Grabs user input and passes to method to create node list
         receiveHTML() {
             let HTMLInput = $('#userHTML').val();
 
             if (!HTMLInput) {
                 return;
             }
-            $('#hiddenHTML').html(HTMLInput);
 
-            let nodeList = document.getElementById("hiddenHTML").childNodes;
+            //POTENTIAL ISSUE - Always includes HTML/HEAD/BODY as it's an entire document. 
+            const domParser = new DOMParser();
+            let parsedHTML = domParser.parseFromString(HTMLInput, "text/html");
 
-            codeConversion.conversionLoop(nodeList);
+            //ISSUE
+            //Only grabs nodes from body and below (i.e user content)
+            //This means that user entered <HTML>, <HEAD> etc are ignored.
+            let nodeList = parsedHTML.body.childNodes;
+
+            codeConversion.stringHandling(nodeList);
         },
 
-        conversionLoop(nodes) {
+        stringHandling(nodeList) {
+            console.log(nodeList);
             let outputString = "";
+            outputString += codeConversion.mainLoop(nodeList);
 
-            nodes.forEach(function (node) {
-                if (node.nodeType == 1) {
-                    outputString += `(:${codeConversion.processElementNodes(node)} `;
-                    if (node.hasChildNodes()) {
-                        outputString += codeConversion.processChildNodes(node);
-                    }
-                }
-                if (node.attributes) {
-                    outputString += codeConversion.processAttributeNodes(node)
-                }
-                if (node.nodeType == 3) {
-                    if (!node.data.match(/\s+/)) {
-                        outputString += codeConversion.processTextNodes(node)
-                    }
-                }
-            })
             pageElements.displayOWL(outputString);
         },
 
-        processElementNodes(node) {
-            //localName maintains case sensitivity
-            return `${node.localName}`;
-        },
+        mainLoop(nodeList) {
+            let loopString = "";
 
-        //NOT WORKING CORRECTLY
-        processChildNodes(node) {
-            console.log(node.childNodes);
-            let childrenFound = node.childNodes;
-
-            let processedChildren = "";
-
-            childrenFound.forEach(function (child) {
-                if (child.nodeType == 3) {
-                    processedChildren += `"${child.data}" `;
-
-                } else if (child.nodeType == 1) {
-                    processedChildren += `(:${child.localName} `;
-                    if (child.hasChildNodes()) {
-                        console.log("nested child detected", child);
-                        processedChildren += codeConversion.processChildNodes(child);
+            nodeList.forEach(function (node) {
+                //element node check
+                if (node.nodeType == 1) {
+                    loopString += `(:${node.localName} `;
+                    //attribute check
+                    if (node.hasAttributes()) {
+                        for (let i = 0; i < node.attributes.length; i++) {
+                            let attr = node.attributes[i];
+                            if (!attr.nodeValue == "") {
+                                loopString += `${attr.localName}: "${attr.value}" `;
+                            } else {
+                                //attributes without values given quote marks (i.e. autofocus, required)
+                                loopString += `"${attr.localName}" `;
+                            }
+                        }
                     }
-
+                    //NOT CURRENTLY WORKING - incorrect placement?
+                    // loopString += codeConversion.closingBracket(node)
                 }
+
+                //text node check (Ignoring nodes of whitespace)
+                else if (node.nodeType == 3 && node.data.match(/\S+/)) {
+                    loopString += `"${node.data}" `;
+                }
+
+                //child node check
+                if (node.hasChildNodes()) {
+                    //restart loop with child nodelist
+                    loopString += codeConversion.childProcessing(node);
+                }
+
             })
-            return processedChildren;
+            //string returned at the end of each node's interrogation
+            return loopString;
         },
 
-        //loops through attributes by index and returns name & value in desired format
-        processAttributeNodes(node) {
-            let attributesFound = "";
-            for (let i = 0; i < node.attributes.length; i++) {
-                if (!node.attributes[i].nodeValue == "") {
-                    attributesFound += `${node.attributes[i].localName}: "${node.attributes[i].nodeValue}" `;
-                } else {
-                    attributesFound += `"${node.attributes[i].localName}" `;
-                }
-            }
-            return attributesFound;
+        childProcessing(node) {
+            //pass child nodelist back to original loop
+            let children = "";
+            children += codeConversion.mainLoop(node.childNodes);
+            //findings from child nodes returned and added to string
+            return children;
         },
 
-        //returns text nodes outside of tags
-        processTextNodes(node) {
-            return ` "${node.data}" `
-        }
+        //FIX THIS 
+        // closingBracket(node) {
+        //     if (node.nextElementSibling == null) {
+        //         console.log("bracket")
+        //         return ")";
+        //     }
+        // }
 
     }
 
@@ -136,6 +127,7 @@ $(document).ready(function () {
 
         convertClickListener() {
             $('#convert').click(codeConversion.receiveHTML);
+            // codeConversion.successCheck();
         },
 
         resetClickListener() {
