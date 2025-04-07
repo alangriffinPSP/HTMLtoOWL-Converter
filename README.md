@@ -27,3 +27,7 @@ New approach using DOM node detection instead. Lots not working. Initial commit 
 ### 26/03/2025
 
 Refactored with one main loop. Still not 100% complete. Closing parentheses handling still a work in progress.
+
+### 07/04/2025
+
+Code refactored once more by Rollo. I have added formatting to the output text and escaping of quotation marks as required by OWL. 

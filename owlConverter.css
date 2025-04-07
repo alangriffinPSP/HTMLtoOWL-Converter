@@ -80,6 +80,10 @@ a:hover {
     display: none;
 }
 
+#output {
+    font-family: Verdana, sans-serif;
+}
+
 #outputContainer {
     display: none;
     margin-top: 20px;
@@ -88,6 +92,6 @@ a:hover {
     padding: 25px;
     color: #d8d6d6;
     background: var(--linkhover);
-    width: 65%;
-    height: auto;
+    width: max-content;
+    height: max-content;
 }

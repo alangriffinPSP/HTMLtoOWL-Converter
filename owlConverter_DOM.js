@@ -1,18 +1,12 @@
-
-// TO FIX:
-
-//Closing parentheses not accurate
-
 $(document).ready(function () {
 
-    //Object for methods to run on page load
     const pageLoad = {
 
         clearForm() {
             $('#conversionForm').trigger('reset');
-            $('#hiddenHTML').html('')
-            $('#outputContainer').hide().html();
-            // $('#userHTML').val('<div class="testClass" id="testID"><h1 id="childH1">This is a child node (text)</h1></div>')
+            $('#outputContainer').hide()
+            // String used for testing
+            // $('#userHTML').val('<div id="1">parent<div id="2">child (tabbed)</div><div id="3">(inline)<div id="4">(tabbed)</div>text</div><div id="5">back one step</div></div>');
         },
 
         themeSet() {
@@ -24,7 +18,107 @@ $(document).ready(function () {
         }
     }
 
-    const codeConversion = {
+    var output = {
+        arr: [],
+        append: function (stuff) {
+            this.arr.push(stuff);
+            return this;
+        },
+        get: function () {
+            process.tabCount = 0;
+            return this.arr.join('');
+        },
+        reset: function () {
+            this.arr = [];
+            process.tabCount = 0;
+        }
+    }
+
+    const process = {
+        tabCount: 0,
+
+        append(stuff) {
+            return output.append(stuff);
+        },
+
+        processNodes(list) {
+            list.forEach(this.processNode);
+        },
+
+        processNode(node) {
+            if (node.nodeType == 1) {
+                process.processElementNode(node);
+            } else if (node.nodeType == 3) {
+                process.processTextNode(node);
+            }
+        },
+
+        processElementNode(node) {
+            this.newLine(); //New line applied
+            this.applyIndent(); //Indent applied if necessary
+            this.indentIncreaseCheck(node); //Indent increase calculation
+            this.append('(:' + node.localName);
+            this.processAttributes(node);
+            if (node.hasChildNodes()) {
+                this.append(' ');
+                this.processNodes(node.childNodes);
+            }
+            this.indentDecreaseCheck(node); //Indent decrese calculation
+            this.append(')');
+        },
+
+        processAttributes(node) {
+            for (let i = 0; i < node.attributes.length; i++) {
+                let attr = node.attributes[i];
+                this.append(' ').append(attr.localName).append(': ');
+                this.append(attr.value ? `"${attr.value}"` : '""');
+            }
+        },
+
+        processTextNode(node) {
+            if (node.data.match(/\S+/)) this.append(' "' + this.escape(node.data) + '" ');
+        },
+
+        escape(text) {
+            let textarr = text.split('')
+
+            textarr.forEach(function (char, index) {
+                if (char == '"') {
+                    textarr[index] = '\\"';
+                }
+            })
+            return textarr.join('');
+        },
+
+        newLine() {
+            process.append('\n');
+        },
+
+        indentIncreaseCheck(node) {
+            //CALCULATED AT THE END OF NODE PROCESSING
+
+            if (node.firstElementChild != null) {
+                //Indent if child node present
+                this.tabCount++;
+            } else if (node.firstElementChild == null && node.nextElementSibling != null) {
+                //no change
+            }
+        },
+
+        indentDecreaseCheck(node) {
+            if (node.nextElementSibling == null && this.tabCount > 0) {
+                //Reduce indent if no child present and no further siblings present
+                this.tabCount--
+            }
+        },
+
+        applyIndent() {
+            process.append('&#9;'.repeat(process.tabCount))
+        }
+
+    }
+
+    const stringReceiver = {
         receiveHTML() {
             let HTMLInput = $('#userHTML').val();
 
@@ -32,81 +126,14 @@ $(document).ready(function () {
                 return;
             }
 
-            //POTENTIAL ISSUE - Always includes HTML/HEAD/BODY as it's an entire document. 
             const domParser = new DOMParser();
             let parsedHTML = domParser.parseFromString(HTMLInput, "text/html");
 
-            //ISSUE
-            //Only grabs nodes from body and below (i.e user content)
-            //This means that user entered <HTML>, <HEAD> etc are ignored.
-            let nodeList = parsedHTML.body.childNodes;
+            output.reset();
+            process.processNodes(parsedHTML.body.childNodes); //change made here (processNode(s))
 
-            codeConversion.stringHandling(nodeList);
-        },
-
-        stringHandling(nodeList) {
-            console.log(nodeList);
-            let outputString = "";
-            outputString += codeConversion.mainLoop(nodeList);
-
-            pageElements.displayOWL(outputString);
-        },
-
-        mainLoop(nodeList) {
-            let loopString = "";
-
-            nodeList.forEach(function (node) {
-                //element node check
-                if (node.nodeType == 1) {
-                    loopString += `(:${node.localName} `;
-                    //attribute check
-                    if (node.hasAttributes()) {
-                        for (let i = 0; i < node.attributes.length; i++) {
-                            let attr = node.attributes[i];
-                            if (!attr.nodeValue == "") {
-                                loopString += `${attr.localName}: "${attr.value}" `;
-                            } else {
-                                //attributes without values given quote marks (i.e. autofocus, required)
-                                loopString += `"${attr.localName}" `;
-                            }
-                        }
-                    }
-                    //NOT CURRENTLY WORKING - incorrect placement?
-                    // loopString += codeConversion.closingBracket(node)
-                }
-
-                //text node check (Ignoring nodes of whitespace)
-                else if (node.nodeType == 3 && node.data.match(/\S+/)) {
-                    loopString += `"${node.data}" `;
-                }
-
-                //child node check
-                if (node.hasChildNodes()) {
-                    //restart loop with child nodelist
-                    loopString += codeConversion.childProcessing(node);
-                }
-
-            })
-            //string returned at the end of each node's interrogation
-            return loopString;
-        },
-
-        childProcessing(node) {
-            //pass child nodelist back to original loop
-            let children = "";
-            children += codeConversion.mainLoop(node.childNodes);
-            //findings from child nodes returned and added to string
-            return children;
-        },
-
-        //FIX THIS 
-        // closingBracket(node) {
-        //     if (node.nextElementSibling == null) {
-        //         console.log("bracket")
-        //         return ")";
-        //     }
-        // }
-
+            pageElements.displayOWL(output.get());
+        }
     }
 
     //Handles page elements 
@@ -122,12 +149,12 @@ $(document).ready(function () {
         },
 
         displayOWL(OWLOutput) {
-            $('#outputContainer').show().html(OWLOutput);
+            $('#outputContainer').show();
+            $('#output').html(OWLOutput);
         },
 
         convertClickListener() {
-            $('#convert').click(codeConversion.receiveHTML);
-            // codeConversion.successCheck();
+            $('#convert').click(stringReceiver.receiveHTML);
         },
 
         resetClickListener() {
