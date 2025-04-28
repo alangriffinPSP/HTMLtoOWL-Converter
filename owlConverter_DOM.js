@@ -4,9 +4,11 @@ $(document).ready(function () {
 
         clearForm() {
             $('#conversionForm').trigger('reset');
-            $('#outputContainer').hide()
-            // String used for testing
-            // $('#userHTML').val('<div id="1">parent<div id="2">child (tabbed)</div><div id="3">(inline)<div id="4">(tabbed)</div>text</div><div id="5">back one step</div></div>');
+            $('#outputContainer').hide();
+            // Strings used for testing
+            // $('#userHTML').val('<div id="1">#1<div id="2">child of #1</div><div id="3">child of #1, sibling of #2<div id="4">child of #3</div>#3</div><div id="5">#5</div></div>');
+            // $('#userHTML').val('<div>text<div id="elem"></div>more text</div><div></div>');
+            // $('#userHTML').val('<div id="1">one<div id="2">two</div><div id="3">three</div></div>');
         },
 
         themeSet() {
@@ -25,18 +27,14 @@ $(document).ready(function () {
             return this;
         },
         get: function () {
-            process.tabCount = 0;
             return this.arr.join('');
         },
         reset: function () {
             this.arr = [];
-            process.tabCount = 0;
         }
     }
 
     const process = {
-        tabCount: 0,
-
         append(stuff) {
             return output.append(stuff);
         },
@@ -46,6 +44,7 @@ $(document).ready(function () {
         },
 
         processNode(node) {
+            process.newLine(node);
             if (node.nodeType == 1) {
                 process.processElementNode(node);
             } else if (node.nodeType == 3) {
@@ -53,17 +52,31 @@ $(document).ready(function () {
             }
         },
 
+        //----New method for indent tracking
+        getNodeDepth(node) {
+            //Indent resets on each method call
+            let indent = 0;
+            let currentNode = node;
+            //Whilst current node: is NOT <BODY> nor direct child of <BODY>
+            while (currentNode.tagName != "BODY" && currentNode.parentNode.tagName != "BODY") {
+                //Indent incremented
+                indent++;
+                //currentNode reassigned to current node's parent
+                currentNode = currentNode.parentElement;
+            }
+            //Indent returned on loop exit
+            return indent;
+        },
+
         processElementNode(node) {
-            this.newLine(); //New line applied
-            this.applyIndent(); //Indent applied if necessary
-            this.indentIncreaseCheck(node); //Indent increase calculation
+            this.applyElementIndent(node);
             this.append('(:' + node.localName);
+            this.contentCheck(node);
             this.processAttributes(node);
             if (node.hasChildNodes()) {
                 this.append(' ');
                 this.processNodes(node.childNodes);
             }
-            this.indentDecreaseCheck(node); //Indent decrese calculation
             this.append(')');
         },
 
@@ -75,8 +88,25 @@ $(document).ready(function () {
             }
         },
 
+        contentCheck(node) {
+            if (!node.hasAttributes() && !node.hasChildNodes()) {
+                process.append(' "" ');
+            }
+        },
+
+        applyElementIndent(node) {
+            process.append('&#9;'.repeat(this.getNodeDepth(node)));
+        },
+
         processTextNode(node) {
-            if (node.data.match(/\S+/)) this.append(' "' + this.escape(node.data) + '" ');
+            this.applyTextIndent(node);
+            if (node.data.match(/\S+/)) this.append('"' + this.escape(node.data) + '" ');
+        },
+
+        applyTextIndent(node) {
+            if (node.parentElement != null && (node.nextSibling != null || node.previousSibling != null)) {
+                process.append('&#9;'.repeat(process.getNodeDepth(node)));
+            }
         },
 
         escape(text) {
@@ -90,32 +120,21 @@ $(document).ready(function () {
             return textarr.join('');
         },
 
-        newLine() {
-            process.append('\n');
-        },
-
-        indentIncreaseCheck(node) {
-            //CALCULATED AT THE END OF NODE PROCESSING
-
-            if (node.firstElementChild != null) {
-                //Indent if child node present
-                this.tabCount++;
-            } else if (node.firstElementChild == null && node.nextElementSibling != null) {
-                //no change
+        newLine(node) {
+                //Text with next or previous sibling = new line
+            if (node.nodeType == 3 && (node.nextSibling != null || node.previousSibling != null)) {
+                process.append('\n');
+                //Element, not direct child of BODY with no previous sibling = no new line
+            } else if (node.nodeType == 1 && node.parentElement.tagName == "BODY" && node.previousSibling == null) {
+                return;
+                //Element with previous sibling = new line
+            } else if (node.nodeType == 1 && node.previousSibling != null) {
+                process.append('\n');
+                //Element not direct child of BODY but has parent element (i.e. is child)
+            } else if (node.nodeType == 1 && node.parentElement.tagName != "BODY" && node.parentElement != null) {
+                process.append('\n');
             }
-        },
-
-        indentDecreaseCheck(node) {
-            if (node.nextElementSibling == null && this.tabCount > 0) {
-                //Reduce indent if no child present and no further siblings present
-                this.tabCount--
-            }
-        },
-
-        applyIndent() {
-            process.append('&#9;'.repeat(process.tabCount))
         }
-
     }
 
     const stringReceiver = {
@@ -130,7 +149,7 @@ $(document).ready(function () {
             let parsedHTML = domParser.parseFromString(HTMLInput, "text/html");
 
             output.reset();
-            process.processNodes(parsedHTML.body.childNodes); //change made here (processNode(s))
+            process.processNodes(parsedHTML.body.childNodes);
 
             pageElements.displayOWL(output.get());
         }
