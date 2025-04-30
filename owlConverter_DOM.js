@@ -34,7 +34,7 @@ $(document).ready(function () {
         }
     }
 
-    //Added list of HTML void elements
+    // //Added list of HTML void elements
     const voidElements = ['area', 'base', 'br', 'col', 'embed', 'hr',
         'img', 'input', 'link', 'meta', 'param',
         'source', 'track', 'wbr'];
@@ -104,9 +104,10 @@ $(document).ready(function () {
             }
         },
 
+        //content check now skipped for <i>
         contentCheck(node) {
-            if (!node.hasAttributes() && !node.hasChildNodes()) {
-                process.append(' "" ');
+            if (!node.hasAttributes() && !node.hasChildNodes() && node.localName != 'i') {
+                process.append(' ""');
             }
         },
 
