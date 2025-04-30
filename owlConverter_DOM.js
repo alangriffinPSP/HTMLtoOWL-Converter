@@ -34,6 +34,11 @@ $(document).ready(function () {
         }
     }
 
+    //Added list of HTML void elements
+    const voidElements = ['area', 'base', 'br', 'col', 'embed', 'hr',
+        'img', 'input', 'link', 'meta', 'param',
+        'source', 'track', 'wbr'];
+
     const process = {
         append(stuff) {
             return output.append(stuff);
@@ -44,8 +49,13 @@ $(document).ready(function () {
         },
 
         processNode(node) {
+            console.log(node);
             process.newLine(node);
-            if (node.nodeType == 1) {
+            process.indent(node);
+            //void element handling added
+            if (voidElements.includes(node.localName)) {
+                process.voidCheck(node);
+            } else if (node.nodeType == 1) {
                 process.processElementNode(node);
             } else if (node.nodeType == 3) {
                 process.processTextNode(node);
@@ -69,7 +79,6 @@ $(document).ready(function () {
         },
 
         processElementNode(node) {
-            this.applyElementIndent(node);
             this.append('(:' + node.localName);
             this.contentCheck(node);
             this.processAttributes(node);
@@ -77,6 +86,13 @@ $(document).ready(function () {
                 this.append(' ');
                 this.processNodes(node.childNodes);
             }
+            this.append(')');
+        },
+
+        //Void elements checked for attributes 
+        voidCheck(node){
+            this.append('(:' + node.localName);
+            this.processAttributes(node);
             this.append(')');
         },
 
@@ -94,18 +110,15 @@ $(document).ready(function () {
             }
         },
 
-        applyElementIndent(node) {
-            process.append('&#9;'.repeat(this.getNodeDepth(node)));
-        },
-
         processTextNode(node) {
-            this.applyTextIndent(node);
-            if (node.data.match(/\S+/)) this.append('"' + this.escape(node.data) + '" ');
+            if (node.data.match(/\S+/)) this.append('"' + this.escape(node.data) + '"');
         },
 
-        applyTextIndent(node) {
-            if (node.parentElement != null && (node.nextSibling != null || node.previousSibling != null)) {
+        indent(node) {
+            if (node.nodeType == 3 && node.parentElement != null && (node.nextSibling != null || node.previousSibling != null)) {
                 process.append('&#9;'.repeat(process.getNodeDepth(node)));
+            } else if (node.nodeType == 1){
+            process.append('&#9;'.repeat(this.getNodeDepth(node)));
             }
         },
 
