@@ -34,12 +34,12 @@ $(document).ready(function () {
         }
     }
 
-    // //Added list of HTML void elements
-    const voidElements = ['area', 'base', 'br', 'col', 'embed', 'hr',
-        'img', 'input', 'link', 'meta', 'param',
-        'source', 'track', 'wbr'];
-
     const process = {
+    
+        selfClose: ['area', 'base', 'br', 'col', 'embed', 'hr',
+            'img', 'input', 'link', 'meta', 'param',
+            'source', 'track', 'wbr', 'i'],
+    
         append(stuff) {
             return output.append(stuff);
         },
@@ -49,11 +49,10 @@ $(document).ready(function () {
         },
 
         processNode(node) {
-            console.log(node);
             process.newLine(node);
             process.indent(node);
             //void element handling added
-            if (voidElements.includes(node.localName)) {
+            if (process.selfClose.includes(node.localName)) {
                 process.voidCheck(node);
             } else if (node.nodeType == 1) {
                 process.processElementNode(node);
@@ -104,9 +103,8 @@ $(document).ready(function () {
             }
         },
 
-        //content check now skipped for <i>
         contentCheck(node) {
-            if (!node.hasAttributes() && !node.hasChildNodes() && node.localName != 'i') {
+            if (!node.hasAttributes() && !node.hasChildNodes()) {
                 process.append(' ""');
             }
         },
