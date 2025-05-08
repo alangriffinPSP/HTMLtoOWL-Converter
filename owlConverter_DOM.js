@@ -9,6 +9,7 @@ $(document).ready(function () {
             // $('#userHTML').val('<div id="1">#1<div id="2">child of #1</div><div id="3">child of #1, sibling of #2<div id="4">child of #3</div>#3</div><div id="5">#5</div></div>');
             // $('#userHTML').val('<div>text<div id="elem"></div>more text</div><div></div>');
             // $('#userHTML').val('<div id="1">one<div id="2">two</div><div id="3">three</div></div>');
+            $('#userHTML').val('<div></div>');
         },
 
         themeSet() {
@@ -35,11 +36,11 @@ $(document).ready(function () {
     }
 
     const process = {
-    
+
         selfClose: ['area', 'base', 'br', 'col', 'embed', 'hr',
             'img', 'input', 'link', 'meta', 'param',
-            'source', 'track', 'wbr', 'i'],
-    
+            'source', 'track', 'wbr'],
+
         append(stuff) {
             return output.append(stuff);
         },
@@ -79,8 +80,8 @@ $(document).ready(function () {
 
         processElementNode(node) {
             this.append('(:' + node.localName);
-            this.contentCheck(node);
             this.processAttributes(node);
+            this.contentCheck(node);
             if (node.hasChildNodes()) {
                 this.append(' ');
                 this.processNodes(node.childNodes);
@@ -89,7 +90,7 @@ $(document).ready(function () {
         },
 
         //Void elements checked for attributes 
-        voidCheck(node){
+        voidCheck(node) {
             this.append('(:' + node.localName);
             this.processAttributes(node);
             this.append(')');
@@ -104,7 +105,7 @@ $(document).ready(function () {
         },
 
         contentCheck(node) {
-            if (!node.hasAttributes() && !node.hasChildNodes()) {
+            if (!node.innerHTML) {
                 process.append(' ""');
             }
         },
@@ -116,8 +117,8 @@ $(document).ready(function () {
         indent(node) {
             if (node.nodeType == 3 && node.parentElement != null && (node.nextSibling != null || node.previousSibling != null)) {
                 process.append('&#9;'.repeat(process.getNodeDepth(node)));
-            } else if (node.nodeType == 1){
-            process.append('&#9;'.repeat(this.getNodeDepth(node)));
+            } else if (node.nodeType == 1) {
+                process.append('&#9;'.repeat(this.getNodeDepth(node)));
             }
         },
 
@@ -133,7 +134,7 @@ $(document).ready(function () {
         },
 
         newLine(node) {
-                //Text with next or previous sibling = new line
+            //Text with next or previous sibling = new line
             if (node.nodeType == 3 && (node.nextSibling != null || node.previousSibling != null)) {
                 process.append('\n');
                 //Element, not direct child of BODY with no previous sibling = no new line
