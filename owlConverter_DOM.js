@@ -9,7 +9,6 @@ $(document).ready(function () {
             // $('#userHTML').val('<div id="1">#1<div id="2">child of #1</div><div id="3">child of #1, sibling of #2<div id="4">child of #3</div>#3</div><div id="5">#5</div></div>');
             // $('#userHTML').val('<div>text<div id="elem"></div>more text</div><div></div>');
             // $('#userHTML').val('<div id="1">one<div id="2">two</div><div id="3">three</div></div>');
-            $('#userHTML').val('<div></div>');
         },
 
         themeSet() {
